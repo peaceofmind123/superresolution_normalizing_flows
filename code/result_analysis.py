@@ -18,9 +18,11 @@ conf_path = './confs/SRFlow_CelebA_8X.yml'
 
 dataroot_lr = './data/validation/lr'
 dataroot_gt = './data/validation/hr'
+
 df_lpips_save_path = './data/validation/df_lpips.csv'
 df_ssim_save_path ='./data/validation/df_ssim.csv'
 df_psnr_save_path = './data/validation/df_psnr.csv'
+
 
 avg_psnr_save_path = './data/validation/avg_psnr.pkl'
 avg_lpips_save_path = './data/validation/avg_lpips.pkl'
@@ -141,7 +143,7 @@ def generateGraphs(df_lpips_path, df_ssim_path, df_psnr_path):
     generateGraph('PSNR', 'SSIM', psnr_vs_ssim_save_path, mean_psnr_vals, mean_ssim_vals,6)
 
 
-def generateGraph(xlabel, ylabel, save_path, xs,ys, fig_idx, inv=False):
+def generateGraph(xlabel, ylabel, save_path, xs,ys, fig_idx, inv=False, multiple=False,xs_old=None, ys_old=None, legends=None):
 
     plt.figure(fig_idx)
     _, ax = plt.subplots(1,1)
@@ -154,10 +156,48 @@ def generateGraph(xlabel, ylabel, save_path, xs,ys, fig_idx, inv=False):
         left=False,
         right=False)
     ax.plot(xs,ys,marker='o')
+    if multiple:
+        # plot another graph within the same figure
+        ax.plot(xs_old, ys_old, marker='o')
+        if legends is not None:
+            ax.legend(legends) # provide legends as an array
     if inv:
         ax.invert_xaxis() # Forgot to include this line of code, causing a bug
 
     plt.savefig(fname=save_path, dpi=600, bbox_inches='tight')
+
+
+def generateGraphOldvNew(df_lpips_path, df_ssim_path, df_psnr_path, df_lpips_old_path, df_ssim_old_path, df_psnr_old_path, legends=['best out of 3 samples','single sample']):
+    df_lpips = pd.read_csv(df_lpips_path, index_col=0)
+    df_lpips_o = pd.read_csv(df_lpips_old_path, index_col=0)
+    df_ssim = pd.read_csv(df_ssim_path, index_col=0)
+    df_ssim_o = pd.read_csv(df_ssim_old_path, index_col=0)
+    df_psnr = pd.read_csv(df_psnr_path, index_col=0)
+    df_psnr_o = pd.read_csv(df_psnr_old_path, index_col=0)
+
+    mean_lpips_vals = df_lpips.mean(axis=0)
+    mean_lpips_vals_o = df_lpips_o.mean(axis=0)
+    mean_ssim_vals = df_ssim.mean(axis=0)
+    mean_ssim_vals_o = df_ssim_o.mean(axis=0)
+    mean_psnr_vals = df_psnr.mean(axis=0)
+    mean_psnr_vals_o = df_psnr_o.mean(axis=0)
+
+
+    # generate Temperature vs metrics graphs
+    temperatures = np.linspace(0, 1, num=11)
+    generateGraph('Temperature', 'PSNR', temp_vs_psnr_save_path, temperatures, mean_psnr_vals, 1,multiple=True,xs_old=temperatures,ys_old=mean_psnr_vals_o, legends=legends)
+    generateGraph('Temperature', 'SSIM', temp_vs_ssim_save_path, temperatures, mean_ssim_vals, 2,multiple=True,xs_old=temperatures,ys_old=mean_ssim_vals_o, legends=legends)
+    generateGraph('Temperature', 'LPIPS', temp_vs_lpips_save_path, temperatures, mean_lpips_vals, 3,multiple=True,xs_old=temperatures,ys_old=mean_lpips_vals_o, legends=legends)
+
+    # generate metric vs metric graphs
+    generateGraph('LPIPS', 'PSNR', lpips_vs_psnr_save_path, mean_lpips_vals, mean_psnr_vals, 4, True,multiple=True,xs_old=mean_lpips_vals_o,ys_old=mean_psnr_vals_o,legends=legends)
+    generateGraph('LPIPS', 'SSIM', lpips_vs_ssim_save_path, mean_lpips_vals, mean_ssim_vals, 5, True,multiple=True,xs_old=mean_lpips_vals_o,ys_old=mean_ssim_vals_o,legends=legends)
+    generateGraph('PSNR', 'SSIM', psnr_vs_ssim_save_path, mean_psnr_vals, mean_ssim_vals, 6,multiple=True,xs_old=mean_lpips_vals_o,ys_old=mean_ssim_vals_o,legends=legends)
+
+
+# function to generate graphs given an array of dfs of results
+# however, now since the generation of averages dataframe csv is correct, lets use that instead
+
 
 # utility functions
 def find_files(wildcard): return natsort.natsorted(glob.glob(wildcard, recursive=True))
@@ -182,3 +222,5 @@ def rgb(t): return (np.clip((t[0] if len(t.shape) == 4 else t).detach().cpu().nu
 if __name__ == '__main__':
     generateGraphs(df_lpips_path=df_lpips_save_path,df_ssim_path=df_ssim_save_path, df_psnr_path=df_psnr_save_path)
     #result_analysis()
+
+

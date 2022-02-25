@@ -12,7 +12,7 @@ import Measure
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from result_analysis import find_files,pickleRead,t,rgb
+from result_analysis import find_files,pickleRead,t,rgb, generateGraphOldvNew
 
 plt.rcParams["font.family"] = 'Times New Roman'
 plt.rcParams["font.size"] = 22
@@ -24,6 +24,10 @@ dataroot_gt = './data/validation/hr'
 df_lpips_save_path = './data/validation/df_lpips.csv'
 df_ssim_save_path ='./data/validation/df_ssim.csv'
 df_psnr_save_path = './data/validation/df_psnr.csv'
+
+df_lpips_save_path_old = './data/validation/df_lpips_old.csv'
+df_ssim_save_path_old ='./data/validation/df_ssim_old.csv'
+df_psnr_save_path_old = './data/validation/df_psnr_old.csv'
 
 avg_psnr_save_path = './data/validation/avg_psnr.pkl'
 avg_lpips_save_path = './data/validation/avg_lpips.pkl'
@@ -137,5 +141,9 @@ def best_out_of_n_analysis(n:int):
     avg_stats_df.to_csv(df_averages_save_path)
 
 
+def generateOldNewGraphsAll():
+    generateGraphOldvNew(df_lpips_save_path,df_ssim_save_path,df_psnr_save_path,df_lpips_save_path_old,df_ssim_save_path_old, df_psnr_save_path_old)
+
 if __name__ == '__main__':
-    best_out_of_n_analysis(3)
+    #best_out_of_n_analysis(3)
+    generateOldNewGraphsAll()
