@@ -197,6 +197,67 @@ def generateGraphOldvNew(df_lpips_path, df_ssim_path, df_psnr_path, df_lpips_old
 
 # function to generate graphs given an array of dfs of results
 # however, now since the generation of averages dataframe csv is correct, lets use that instead
+def generateGraphsMultipleSamples(dfs_paths, temp_psnr_save_path, temp_ssim_save_path, temp_lpips_save_path, lpips_psnr_save_path, lpips_ssim_save_path):
+
+    # get dfs from paths
+    dfs_averages = readAveragesDFs(dfs_paths)
+
+    yss_psnr = [], yss_ssim = [], yss_lpips = []
+    xs_temp = np.linspace(0,1,11)
+    xss_temp = [xs_temp for i in range(10)]
+
+    for i,df in enumerate(dfs_averages):
+        # get the series from the df
+        psnr_series = df['psnr']
+        ssim_series = df['ssim']
+        lpips_series = df['lpips']
+
+        # fill the yss values with the series values
+        yss_psnr.append(psnr_series.to_numpy())
+        yss_ssim.append(ssim_series.to_numpy())
+        yss_lpips.append(lpips_series.to_numpy())
+
+    # create legend
+    legends = [f'best out of {j+1} sample(s)' for j in range(len(dfs_averages))]
+
+    # temperature vs metrics curves
+    generateNCurves('Temperature','PSNR',temp_psnr_save_path,xss_temp,yss_psnr,0,legends=legends)
+    generateNCurves('Temperature','SSIM',temp_ssim_save_path,xss_temp,yss_ssim,1,legends=legends)
+    generateNCurves('Temperature', 'LPIPS', temp_lpips_save_path, xss_temp, yss_lpips, 2, legends=legends)
+
+    # metric vs metric curves
+    generateNCurves('LPIPS', 'PSNR', temp_psnr_save_path, xss_temp, yss_psnr, 3,inv=True, legends=legends)
+    generateNCurves('LPIPS', 'SSIM', temp_ssim_save_path, xss_temp, yss_ssim, 4,inv=True, legends=legends)
+
+
+# function to generate n different curves in the same graph
+def generateNCurves(xlabel, ylabel, save_path, xss,yss, fig_idx, inv=False, legends=None):
+    plt.figure(fig_idx)
+    _, ax = plt.subplots(1, 1)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid()
+    plt.tick_params(
+        bottom=False,  # ticks along the bottom edge are off
+        top=False,  # ticks along the top edge are off,
+        left=False,
+        right=False)
+
+    # plot the curves on the same axes object
+    for xs,ys in zip(xss,yss): # get data of each curve
+        ax.plot(xs,ys,marker='o')
+
+    if legends is not None:
+        ax.legend(legends)  # provide legends as an array
+
+    if inv:
+        ax.invert_xaxis() # invert the x axis so that it is in descending order
+
+    plt.savefig(fname=save_path, dpi=600, bbox_inches='tight')
+
+
+def readAveragesDFs(dfs_paths):
+    return [pd.read_csv(p,index_col=0) for p in dfs_paths]
 
 
 # utility functions
