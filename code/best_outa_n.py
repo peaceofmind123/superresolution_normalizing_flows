@@ -11,7 +11,7 @@ from PIL import Image
 import Measure
 import pandas as pd
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from result_analysis import find_files,pickleRead,t,rgb, generateGraphOldvNew
 
 plt.rcParams["font.family"] = 'Times New Roman'
@@ -35,7 +35,7 @@ avg_ssim_save_path = './data/validation/avg_ssim.pkl'
 
 df_averages_save_path = './data/validation/df_averages.csv'
 
-def best_out_of_n_analysis(n:int):
+def best_out_of_n_analysis(n:int, df_averages_save_path=df_averages_save_path):
 
     # load the model
     model, opt = load_model(conf_path)
@@ -72,8 +72,8 @@ def best_out_of_n_analysis(n:int):
     # count the current lq,gt pair
     count = 0
 
-    for lq, gt, fname in tqdm(zip(lqs, gts, filenames)):
-        print(f'Image#: {count + 1}')
+    for lq, gt, fname in tqdm(zip(lqs, gts, filenames),total=len(lqs)):
+        #print(f'Image#: {count + 1}')
         for i, temperature in enumerate(np.linspace(0, 1, num=11)):
 
             #initialize max and min values and images
@@ -86,9 +86,9 @@ def best_out_of_n_analysis(n:int):
                 # Sample a super-resolution for a low-resolution image
                 sr = rgb(model.get_sr(lq=t(lq), heat=temperature))
                 psnr, ssim, lpips = measure.measure(sr, gt)
-                print(
-                    'Temperature: {:0.2f} - PSNR: {:0.1f}, SSIM: {:0.1f}, LPIPS: {:0.2f}\n\n'.format(temperature, psnr,
-                                                                                                     ssim, lpips))
+                #print(
+                #    'Temperature: {:0.2f} - PSNR: {:0.1f}, SSIM: {:0.1f}, LPIPS: {:0.2f}\n\n'.format(temperature, psnr,
+                #                                                                                     ssim, lpips))
                 if psnr > max_psnr:
                     max_psnr = psnr
                     max_psnr_sr = sr
@@ -141,9 +141,19 @@ def best_out_of_n_analysis(n:int):
     avg_stats_df.to_csv(df_averages_save_path)
 
 
+
 def generateOldNewGraphsAll():
     generateGraphOldvNew(df_lpips_save_path,df_ssim_save_path,df_psnr_save_path,df_lpips_save_path_old,df_ssim_save_path_old, df_psnr_save_path_old)
 
+
+def runAnalysis(start=1,end=5):
+    """
+    Run best out of n analysis for multiple values of n
+    """
+    for i in range(start,end+1):
+        best_out_of_n_analysis(i,f'./data/validation/df_averages_{i}_samples.csv')
+
 if __name__ == '__main__':
     #best_out_of_n_analysis(3)
-    generateOldNewGraphsAll()
+    #generateOldNewGraphsAll()
+    runAnalysis()
