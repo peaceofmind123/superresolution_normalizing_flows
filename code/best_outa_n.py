@@ -35,7 +35,8 @@ def best_out_of_n_analysis(n:int):
 
     # load the model
     model, opt = load_model(conf_path)
-
+    if torch.cuda.is_available():
+        model = model.to('cuda')
     # read data
     lq_paths = fiFindByWildcard(os.path.join(dataroot_lr, '*.jpg'))
     gt_paths = fiFindByWildcard(os.path.join(dataroot_gt, '*.jpg'))
