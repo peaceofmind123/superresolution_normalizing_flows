@@ -339,6 +339,18 @@ def runCalcRunningAvgTest():
         assert f'{avg:.2f}' == f'{running_avg:.2f}'
     print("Test Passing!!")
 
+def classInitializationTest():
+    """Meant to be run in debug mode to observe whether the variables are init correctly"""
+    analysis = Analysis(conf_path,dataroot_lr, dataroot_gt)
+    pass
+
+def endToEndTest():
+    test_dataroot_lr = './data/validation/test/lr'
+    test_dataroot_gt = './data/validation/test/gt'
+
+    analysis = Analysis(conf_path,test_dataroot_lr, test_dataroot_gt)
+    analysis.best_out_of_n_analysis(1,5)
+
 def runTests():
     runSaveDfsTest()
     runCalcRunningAvgTest()
@@ -348,4 +360,5 @@ if __name__ == '__main__':
     # generateOldNewGraphsAll()
     #runAnalysis()
     #runTests()
-    runCalcRunningAvgTest()
+    #runCalcRunningAvgTest()
+    endToEndTest()
