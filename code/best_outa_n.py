@@ -45,10 +45,21 @@ class Analysis:
     def __init__(self, conf_path, dataroot_lr, dataroot_gt):
 
         # load the model
-        self.model, self.opt = load_model(conf_path)
-        print(f'Model is none: {self.model is None}')
-        if torch.cuda.is_available():
-            self.model = self.model.to(device=torch.device('cuda'))
+        opt = option.parse(conf_path, is_train=False)
+        print(f'opt: {opt}')
+        opt['gpu_ids'] = None
+        opt = option.dict_to_nonedict(opt)
+        print(f'opt_after_dict_nonedict: {opt}')
+        self.model = create_model(opt)
+        print(f'model initial: {self.model}')
+        model_path = opt_get(opt, ['model_path'], None)
+        print(f'model_path: {model_path}')
+        self.model.load_network(load_path=model_path, network=self.model.netG)
+        print(f'model before returning: {self.model}')
+
+        self.opt = opt
+
+
 
         # read data
         self.lq_paths = fiFindByWildcard(os.path.join(dataroot_lr, '*.jpg'))
