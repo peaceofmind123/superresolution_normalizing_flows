@@ -13,7 +13,7 @@ import Measure
 import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm.auto import tqdm
-from result_analysis import find_files, pickleRead, t, rgb, generateGraphOldvNew
+from result_analysis import find_files, pickleRead, t, rgb, generateGraphOldvNew, generateNCurves
 
 plt.rcParams["font.family"] = 'Times New Roman'
 plt.rcParams["font.size"] = 22
@@ -116,6 +116,52 @@ class Analysis:
         pd.DataFrame(avg_psnr_df).to_csv(df_averages_save_path_psnr)
         pd.DataFrame(avg_ssim_df).to_csv(df_averages_save_path_ssim)
         pd.DataFrame(avg_lpips_df).to_csv(df_averages_save_path_lpips)
+
+    def generateGraphsFromCSVs(self, df_averages_save_path_psnr,
+                               df_averages_save_path_ssim,
+                               df_averages_save_path_lpips,
+                               save_path_dict):
+        dfs = self.readAveragesDFs([df_averages_save_path_psnr, df_averages_save_path_ssim,df_averages_save_path_lpips])
+        # create legend
+        legends = [f'n={j + 1}' for j in range(len(dfs['psnr']))]
+
+        # initialize figure id
+        fig_id = 0
+        # get ys and xs from the dataframes
+        for meas in ['psnr','ssim','lpips']: # 3 for psnr, ssim and lpips
+            # construct to hold the ys and xs values for multiple curves
+            yss = []
+            xs_temp = np.linspace(0, 1, 11)
+            xss_temp = [xs_temp for i in range(10)]
+
+            # fill the constructs
+            df = dfs[meas] # get the df for a particular measure
+            for sample_size in df: # the column indices are sample_sizes
+                series = df[sample_size]
+                ys = series.to_numpy()
+                yss.append(ys)
+
+            # draw the curves
+            # temperature vs metrics curves
+            generateNCurves('Temperature', meas,
+                            save_path_dict['temperature'][meas],
+                            xss_temp,yss, fig_id, legends=legends)
+            fig_id += 1
+            # metric vs metric curves
+            for meas2 in ['psnr','ssim','lpips']:
+                if (meas =='lpips' and meas2 == 'psnr') or \
+                        (meas == 'lpips' and meas2 == 'ssim') \
+                        or (meas == 'psnr' and meas2 == 'ssim'):
+                    not_to_inv = (meas =='psnr' and meas2 == 'ssim')
+                    generateNCurves(meas, meas2,
+                                    save_path_dict[meas][meas2],
+                                    xss_temp, yss, fig_id,
+                                    legends=legends, inv=(not not_to_inv))
+                    fig_id += 1
+
+    def readAveragesDFs(self,dfs_paths):
+        return {meas: pd.read_csv(p, index_col=0) for p
+                in dfs_paths for meas in ['psnr', 'ssim','lpips']}
 
     def best_out_of_n_analysis(self, n_samples_start, n_samples_end ):
         # initialize dataframes and sums
@@ -351,6 +397,26 @@ def endToEndTest():
     analysis = Analysis(conf_path,test_dataroot_lr, test_dataroot_gt)
     analysis.best_out_of_n_analysis(1,5)
 
+def generateCurvesTest():
+    test_dataroot_lr = './data/validation/test/lr'
+    test_dataroot_gt = './data/validation/test/gt'
+    root_path = './data/validation/'
+    save_path_dict = {'temperature': {
+        'psnr': root_path+'temp-psnr.png',
+        'ssim': root_path+'temp-ssim.png',
+        'lpips':root_path + 'temp-lpips.png'
+    },'lpips': {
+        'psnr': root_path+'lpips-psnr.png',
+        'ssim': root_path + 'lpips-ssim.png'
+    },'psnr': {
+        'ssim': root_path + 'psnr-ssim.png'
+    }
+    }
+    analysis = Analysis(conf_path, test_dataroot_lr, test_dataroot_gt)
+    analysis.generateGraphsFromCSVs(df_averages_save_path_psnr,
+                                    df_averages_save_path_ssim,
+                                    df_averages_save_path_lpips,
+                                    save_path_dict)
 def runTests():
     runSaveDfsTest()
     runCalcRunningAvgTest()
@@ -361,4 +427,5 @@ if __name__ == '__main__':
     #runAnalysis()
     #runTests()
     #runCalcRunningAvgTest()
-    endToEndTest()
+    #endToEndTest()
+    generateCurvesTest()
