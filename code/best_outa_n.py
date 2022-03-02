@@ -145,7 +145,7 @@ class Analysis:
             # temperature vs metrics curves
             generateNCurves('Temperature', meas,
                             save_path_dict['temperature'][meas],
-                            xss_temp,yss, fig_id, legends=legends)
+                            xss_temp, yss, fig_id, legends=legends)
             fig_id += 1
             # metric vs metric curves
             for meas2 in ['psnr','ssim','lpips']:
@@ -153,15 +153,18 @@ class Analysis:
                         (meas == 'lpips' and meas2 == 'ssim') \
                         or (meas == 'psnr' and meas2 == 'ssim'):
                     not_to_inv = (meas =='psnr' and meas2 == 'ssim')
+                    df = dfs[meas2]
+                    yss2 = [df[sample_size].to_numpy() for sample_size in df]
                     generateNCurves(meas, meas2,
                                     save_path_dict[meas][meas2],
-                                    xss_temp, yss, fig_id,
+                                    yss, yss2, fig_id,
                                     legends=legends, inv=(not not_to_inv))
                     fig_id += 1
 
     def readAveragesDFs(self,dfs_paths):
-        return {meas: pd.read_csv(p, index_col=0) for p
-                in dfs_paths for meas in ['psnr', 'ssim','lpips']}
+
+        return {meas: pd.read_csv(p, index_col=0) for meas,p in zip(['psnr', 'ssim','lpips'],
+                dfs_paths)}
 
     def best_out_of_n_analysis(self, n_samples_start, n_samples_end ):
         # initialize dataframes and sums
