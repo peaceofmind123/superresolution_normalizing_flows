@@ -6,7 +6,7 @@ import os
 import options.options as option
 from models import create_model
 from imresize import imresize
-from test import load_model, fiFindByWildcard, imread
+from test import  fiFindByWildcard, imread
 from PIL import Image
 import Measure
 import pandas as pd

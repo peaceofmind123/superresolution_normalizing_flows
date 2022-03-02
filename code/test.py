@@ -39,12 +39,16 @@ def fiFindByWildcard(wildcard):
 
 def load_model(conf_path):
     opt = option.parse(conf_path, is_train=False)
+    print(f'opt: {opt}')
     opt['gpu_ids'] = None
     opt = option.dict_to_nonedict(opt)
+    print(f'opt_after_dict_nonedict: {opt}')
     model = create_model(opt)
-
+    print(f'model initial: {model}')
     model_path = opt_get(opt, ['model_path'], None)
+    print(f'model_path: {model_path}')
     model.load_network(load_path=model_path, network=model.netG)
+    print(f'model before returning: {model}')
     return model, opt
 
 
