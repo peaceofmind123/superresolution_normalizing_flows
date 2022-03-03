@@ -435,6 +435,26 @@ def runTests():
     runSaveDfsTest()
     runCalcRunningAvgTest()
 
+
+def generateCurvesMain():
+    analysis = Analysis(conf_path,dataroot_lr, dataroot_gt)
+    root_path = './data/validation/'
+    save_path_dict = {'temperature': {
+        'psnr': root_path + 'temp-psnr.png',
+        'ssim': root_path + 'temp-ssim.png',
+        'lpips': root_path + 'temp-lpips.png'
+    }, 'lpips': {
+        'psnr': root_path + 'lpips-psnr.png',
+        'ssim': root_path + 'lpips-ssim.png'
+    }, 'psnr': {
+        'ssim': root_path + 'psnr-ssim.png'
+    }
+    }
+    analysis.generateGraphsFromCSVs(df_averages_save_path_psnr,
+                                    df_averages_save_path_ssim,
+                                    df_averages_save_path_lpips,
+                                    save_path_dict)
+
 if __name__ == '__main__':
     # best_out_of_n_analysis(3)
     # generateOldNewGraphsAll()
@@ -442,4 +462,4 @@ if __name__ == '__main__':
     #runTests()
     #runCalcRunningAvgTest()
     #endToEndTest()
-    generateCurvesTest()
+    generateCurvesMain()
