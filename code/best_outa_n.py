@@ -358,7 +358,6 @@ def runAnalysisAllAtOnce(end=5):
 
 def load_model(conf_path):
     opt = option.parse(conf_path, is_train=False)
-    print(f'opt: {opt}')
     opt['gpu_ids'] = None
     opt = option.dict_to_nonedict(opt)
     print(f'opt_after_dict_nonedict: {opt}')
@@ -368,8 +367,6 @@ def load_model(conf_path):
     print(f'model_path: {model_path}')
     model.load_network(load_path=model_path, network=model.netG)
     print(f'model before returning: {model}')
-    if torch.cuda.is_available():
-        return model.to(device=torch.device('cuda')), opt
     return model, opt
 
 

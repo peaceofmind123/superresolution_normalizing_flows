@@ -181,6 +181,8 @@ def format_measurements(meas):
     str_out = ", ".join(s_out)
     return str_out
 
+def load_model_gpu(conf_path):
+    pass
 
 if __name__ == "__main__":
     main()
