@@ -203,6 +203,7 @@ class FlowUpsamplerNet(nn.Module):
         reverse = False
         level_conditionals = {}
         bypasses = {}
+        z_features = []
 
         L = opt_get(self.opt, ['network_G', 'flow', 'L'])
 
@@ -227,7 +228,6 @@ class FlowUpsamplerNet(nn.Module):
                 fl_fea, logdet = layer(fl_fea, logdet, reverse=reverse)
 
         z = fl_fea
-
         if not isinstance(epses, list):
             return z, logdet
 
