@@ -358,7 +358,9 @@ def runAnalysisAllAtOnce(end=5):
 
 def load_model(conf_path):
     opt = option.parse(conf_path, is_train=False)
-    opt['gpu_ids'] = None
+    if not torch.cuda.is_available(): # run on cpu
+        opt['gpu_ids'] = None
+
     opt = option.dict_to_nonedict(opt)
     print(f'opt_after_dict_nonedict: {opt}')
     model = create_model(opt)

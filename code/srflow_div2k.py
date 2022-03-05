@@ -141,8 +141,9 @@ class Div2kModelAnalysis:
                     sr_img[start_idx_row_sr: end_idx_row_sr, start_idx_col_sr: end_idx_col_sr] = rgb(self.model.get_sr(lq=t(patch), heat=temperature))
 
             lq = sr_img
+        print(lq)
 
-        plt.imsave(output_img_path, lq)
+        plt.imsave(output_img_path, lq.astype('uint8'))
 
 def generateSRImageTest():
     div2kAnalysis = Div2kModelAnalysis(conf_path)
@@ -156,9 +157,9 @@ def find_final_res_iters_test():
 
 def heirarchical_upscaling_test():
     div2kAnalysis = Div2kModelAnalysis(conf_path)
-    div2kAnalysis.heirarchicalUpscaling('./data/div2k/test/sr/remote_sensing/Data2.png',
+    div2kAnalysis.heirarchicalUpscaling('./data/div2k/test/lr/0819x8.png',
                                         1,
-                                        './data/div2k/test/sr/remote_sensing/Data2_heir.png')
+                                        './data/div2k/test/sr/0819x8_heir.png')
 if __name__ == '__main__':
     #Div2kModelAnalysis.upscaleBicubic('./data/div2k/test/lr/remote_sensing/10mc.jpg',
      #                                 './data/div2k/test/upscaled_bicubic/remote_sensing/10mc.png')
