@@ -61,7 +61,7 @@ class ImageDenoising:
         empirical_mean, empirical_std = z_flats.mean(), z_flats.std(unbiased=False)
 
         # broadcasted normalization operation
-        z_flats = sampled_std / empirical_std * (z_flats - empirical_mean) + sampled_mean
+        z_flats = (sampled_std / empirical_std) * (z_flats - empirical_mean) + sampled_mean
 
         return z_flats
 
@@ -110,35 +110,49 @@ class ImageDenoising:
         return zs_temp
 
     def restore_img(self, degraded_img_path, lq_img_path,temperature=0.8):
-        """The intermediate z vals saved for debugging purposes only"""
+
 
         lq = t(imresize(imread(lq_img_path), output_shape=(20, 20)))
         zs = self.get_multiple_zs(lq_img_path, gt_img_path=degraded_img_path)
 
         spatial_normalized_zs = self.spatial_normalize_zs(zs, 0.8)
-        for z in spatial_normalized_zs:
-            plt.imshow(z[0,0,:,:]) # just show the first channel
-            plt.show()
         local_normalized_zs = self.local_normalize_zs(spatial_normalized_zs, 0.8)
         restored = rgb(self.model.get_sr(lq=lq, heat=temperature,epses=local_normalized_zs))
         return restored
 
 
+def image_write(img, path):
+    plt.imsave(path,img)
+
+def downsample_and_write(gt_img_path, lq_img_path):
+    lq = imresize(imread(gt_img_path), output_shape=(20, 20))
+    image_write(lq,lq_img_path)
+
+
+def downsample_expt():
+    gt_img_paths = ['./data/camilia.jpeg', './data/sansa.jpeg', './data/srinkhala.jpeg']
+    lq_img_paths = ['./data/camilia-lq.png', './data/sansa-lq.jpeg', './data/srinkhala-lq.jpeg']
+
+    for gt_img_path, lq_img_path in zip(gt_img_paths, lq_img_paths):
+        downsample_and_write(gt_img_path,lq_img_path)
+
 def get_sr_with_epses_expt():
     """Test passing"""
-    lq_img_path = './data/validation/lr/010624.jpg'
-    gt_img_path = './data/validation/hr/009757.jpg'
+    lq_img_path = './data/sansa-lq.jpeg'
+    gt_img_path = './data/sansa.jpeg'
     lq = t(imresize(imread(lq_img_path), output_shape=(20, 20)))
     imgDenoising = ImageDenoising(conf_path)
     zs = imgDenoising.get_multiple_zs(lq_img_path, gt_img_path)
-    #zs = imgDenoising.global_normalize_zs(zs)
+    zs = imgDenoising.local_normalize_zs(zs)
     sr = rgb(imgDenoising.model.get_sr(lq=lq, heat=0.8, epses=zs))
     plt.imshow(sr)
     plt.show()
 
 if __name__ == '__main__':
 
-    #get_sr_with_epses_expt()
+
+
+    get_sr_with_epses_expt()
 
     imgDenoising = ImageDenoising(conf_path)
 
@@ -147,6 +161,6 @@ if __name__ == '__main__':
     denoised_img_path = './data/validation/denoising/009757.jpg'
 
     denoised_img = imgDenoising.restore_img(degraded_img_path=gt_img_path, lq_img_path=lq_img_path, temperature=0.8)
-    plt.imsave(denoised_img_path,denoised_img, dpi=600)
-
+    plt.imshow(denoised_img)
+    plt.show()
     pass
