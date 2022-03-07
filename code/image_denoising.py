@@ -30,11 +30,11 @@ class ImageDenoising:
         self.model, self.opt = load_model(conf_path)
         a = 1
 
-    def get_multiple_zs(self, lq_img_path, gt_img_path):
+    def get_multiple_zs(self, lq_img, gt_img):
         # read lq img
-        lq = t(imresize(imread(lq_img_path), output_shape=(20, 20)))
+        lq = t(imresize(lq_img, output_shape=(20, 20)))
         # read gt img
-        gt = t(imresize(imread(gt_img_path), output_shape=(160,160)))
+        gt = t(imresize(gt_img, output_shape=(160,160)))
 
         # providing the epses param will record the intermediate latent codes as well
         return self.model.get_encode_z(lq=lq, gt=gt, epses=[])
@@ -109,17 +109,20 @@ class ImageDenoising:
 
         return zs_temp
 
-    def restore_img(self, degraded_img_path, lq_img_path,temperature=0.8):
+    def restore_img(self, degraded_img, lq_img,temperature=0.8):
 
 
-        lq = t(imresize(imread(lq_img_path), output_shape=(20, 20)))
-        zs = self.get_multiple_zs(lq_img_path, gt_img_path=degraded_img_path)
+
+        zs = self.get_multiple_zs(lq_img, gt_img=degraded_img)
 
         spatial_normalized_zs = self.spatial_normalize_zs(zs, 0.8)
         local_normalized_zs = self.local_normalize_zs(spatial_normalized_zs, 0.8)
-        restored = rgb(self.model.get_sr(lq=lq, heat=temperature,epses=local_normalized_zs))
+        restored = rgb(self.model.get_sr(lq=t(lq_img), heat=temperature,epses=local_normalized_zs))
         return restored
 
+    def add_noise(self,gt_img, mean,std):
+        noise = np.random.normal(loc=mean, scale=std, size=gt_img.shape)
+        return gt_img + noise
 
 def image_write(img, path):
     plt.imsave(path,img)
@@ -148,19 +151,30 @@ def get_sr_with_epses_expt():
     plt.imshow(sr)
     plt.show()
 
+def denoising_with_noise_expt(lq_img_path, gt_img_path,mean=0.0, std=0.01):
+    imgDenoising = ImageDenoising(conf_path)
+    lq = imresize(imread(lq_img_path), output_shape=(20, 20))
+    gt = imresize(imread(gt_img_path), output_shape=(160, 160))
+    noisy_img = imgDenoising.add_noise(gt,mean,std)
+    plt.imshow(noisy_img)
+    plt.show()
+    restored = imgDenoising.restore_img(noisy_img,lq,0.6)
+    plt.imshow(restored)
+    plt.show()
 if __name__ == '__main__':
 
 
+    denoising_with_noise_expt('./data/sansa-lq.jpeg','./data/sansa.jpeg')
 
-    get_sr_with_epses_expt()
-
-    imgDenoising = ImageDenoising(conf_path)
-
-    lq_img_path = './data/validation/lr/009757.jpg'
-    gt_img_path = './data/validation/hr/009757.jpg'
-    denoised_img_path = './data/validation/denoising/009757.jpg'
-
-    denoised_img = imgDenoising.restore_img(degraded_img_path=gt_img_path, lq_img_path=lq_img_path, temperature=0.8)
-    plt.imshow(denoised_img)
-    plt.show()
-    pass
+    # get_sr_with_epses_expt()
+    #
+    # imgDenoising = ImageDenoising(conf_path)
+    #
+    # lq_img_path = './data/validation/lr/009757.jpg'
+    # gt_img_path = './data/validation/hr/009757.jpg'
+    # denoised_img_path = './data/validation/denoising/009757.jpg'
+    #
+    # denoised_img = imgDenoising.restore_img(degraded_img_path=gt_img_path, lq_img_path=lq_img_path, temperature=0.8)
+    # plt.imshow(denoised_img)
+    # plt.show()
+    # pass
