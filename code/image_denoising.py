@@ -21,6 +21,7 @@ from result_analysis import find_files, pickleRead, t, rgb
 from best_outa_n import load_model
 import math
 conf_path = './confs/SRFlow_CelebA_8X.yml'
+plt.show()
 
 class ImageDenoising:
     def __init__(self, conf_path):
@@ -43,7 +44,7 @@ class ImageDenoising:
         """
         Sample empirical mean and variance from the Normal and gamma distribution respectively
         """
-        mu_hat = np.random.normal(loc=0.0, scale=temperature) # the empirical mean
+        mu_hat = np.random.normal(loc=0.0, scale=temperature / num_zs) # the empirical mean
         # the shape (k) and scale (theta) parameters
         k = (num_zs - 1)/2
         theta = (2*temperature)/(num_zs - 1)
@@ -109,14 +110,43 @@ class ImageDenoising:
         return zs_temp
 
     def restore_img(self, degraded_img_path, lq_img_path,temperature=0.8):
-        zs = self.get_multiple_zs('./data/validation/hr/009757.jpg', './data/validation/hr/009757.jpg')
-        spatial_normalized_zs = self.spatial_normalize_zs(zs, 0.8)
-        local_normalized_zs = self.local_normalize_zs(spatial_normalized_zs, 0.8)
+        """The intermediate z vals saved for debugging purposes only"""
 
+        lq = t(imresize(imread(lq_img_path), output_shape=(20, 20)))
+        zs = self.get_multiple_zs(lq_img_path, gt_img_path=degraded_img_path)
+
+        spatial_normalized_zs = self.spatial_normalize_zs(zs, 0.8)
+        for z in spatial_normalized_zs:
+            plt.imshow(z[0,0,:,:]) # just show the first channel
+            plt.show()
+        local_normalized_zs = self.local_normalize_zs(spatial_normalized_zs, 0.8)
+        restored = rgb(self.model.get_sr(lq=lq, heat=temperature,epses=local_normalized_zs))
+        return restored
+
+
+def get_sr_with_epses_expt():
+    """Test passing"""
+    lq_img_path = './data/validation/lr/010624.jpg'
+    gt_img_path = './data/validation/hr/009757.jpg'
+    lq = t(imresize(imread(lq_img_path), output_shape=(20, 20)))
+    imgDenoising = ImageDenoising(conf_path)
+    zs = imgDenoising.get_multiple_zs(lq_img_path, gt_img_path)
+    #zs = imgDenoising.global_normalize_zs(zs)
+    sr = rgb(imgDenoising.model.get_sr(lq=lq, heat=0.8, epses=zs))
+    plt.imshow(sr)
+    plt.show()
 
 if __name__ == '__main__':
+
+    #get_sr_with_epses_expt()
+
     imgDenoising = ImageDenoising(conf_path)
-    zs = imgDenoising.get_multiple_zs('./data/validation/lr/009757.jpg','./data/validation/hr/009757.jpg')
-    spatial_normalized_zs = imgDenoising.spatial_normalize_zs(zs,0.8)
-    local_normalized_zs = imgDenoising.local_normalize_zs(spatial_normalized_zs, 0.8)
+
+    lq_img_path = './data/validation/lr/009757.jpg'
+    gt_img_path = './data/validation/hr/009757.jpg'
+    denoised_img_path = './data/validation/denoising/009757.jpg'
+
+    denoised_img = imgDenoising.restore_img(degraded_img_path=gt_img_path, lq_img_path=lq_img_path, temperature=0.8)
+    plt.imsave(denoised_img_path,denoised_img, dpi=600)
+
     pass
