@@ -121,8 +121,14 @@ class ImageDenoising:
         return restored
 
     def add_noise(self,gt_img, mean,std):
-        noise = np.random.normal(loc=mean, scale=std, size=gt_img.shape)
+        noise = np.random.normal(loc=mean, scale=std, size=gt_img.shape).astype(int)
+
         return gt_img + noise
+
+    def restore_degraded_img(self, degraded_img, temperature=0.8):
+        """A helper method"""
+        lq_img = imresize(degraded_img, output_shape=(20,20))
+        return self.restore_img(degraded_img,lq_img,temperature)
 
 def image_write(img, path):
     plt.imsave(path,img)
@@ -151,16 +157,17 @@ def get_sr_with_epses_expt():
     plt.imshow(sr)
     plt.show()
 
-def denoising_with_noise_expt(lq_img_path, gt_img_path,mean=0.0, std=0.01):
+def denoising_with_noise_expt(lq_img_path, gt_img_path,mean=0.0, std=20):
     imgDenoising = ImageDenoising(conf_path)
     lq = imresize(imread(lq_img_path), output_shape=(20, 20))
     gt = imresize(imread(gt_img_path), output_shape=(160, 160))
     noisy_img = imgDenoising.add_noise(gt,mean,std)
     plt.imshow(noisy_img)
     plt.show()
-    restored = imgDenoising.restore_img(noisy_img,lq,0.6)
+    restored = imgDenoising.restore_degraded_img(noisy_img)
     plt.imshow(restored)
     plt.show()
+    pass
 if __name__ == '__main__':
 
 
