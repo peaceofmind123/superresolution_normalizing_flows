@@ -113,11 +113,7 @@ class ImageDenoising:
         return zs_temp
 
     def restore_img(self, degraded_img, lq_img,temperature=0.8):
-
-
-
         zs = self.get_multiple_zs(lq_img, gt_img=degraded_img)
-
         spatial_normalized_zs = self.spatial_normalize_zs(zs, 0.8)
         local_normalized_zs = self.local_normalize_zs(spatial_normalized_zs, 0.8)
         restored = rgb(self.model.get_sr(lq=t(lq_img), heat=temperature,epses=local_normalized_zs))
@@ -135,8 +131,28 @@ class ImageDenoising:
 
 
 class Noise:
-    def __init__(self, type):
+    def __init__(self, type, **kwargs):
         self.type = type
+        self.kwargs = kwargs
+
+        if type == 'gaussian':
+            self.noise_func = Noise.add_gaussian_noise
+        elif type == 'rayleigh':
+            self.noise_func = Noise.add_rayleigh_noise
+        elif type == 'gamma':
+            self.noise_func = Noise.add_gamma_noise
+        elif type == 'exp':
+            self.noise_func = Noise.add_exp_noise
+        elif type == 'salt_pepper':
+            self.noise_func = Noise.add_salt_pepper_noise
+        elif type == 'uniform':
+            self.noise_func = Noise.add_uniform_noise
+        else:
+            raise NotImplementedError(f'Noise model {type} has not been implemented!')
+
+    def add_noise(self, gt_img):
+        """Add noise, assuming correct noise model params are provided in kwargs"""
+        return self.noise_func(gt_img, self.kwargs)
 
     @staticmethod
     def add_gaussian_noise( gt_img, mean, std):
@@ -205,7 +221,7 @@ def get_sr_with_epses_expt():
     plt.imshow(sr)
     plt.show()
 
-def denoising_with_noise_expt( gt_img_path,mean=0.0, std=20):
+def denoising_with_noise_expt( gt_img_path,noise_type='gaussian',):
     imgDenoising = ImageDenoising(conf_path)
     gt = imresize(imread(gt_img_path), output_shape=(160, 160))
     noisy_img = imgDenoising.add_gaussian_noise(gt, mean, std)
@@ -218,6 +234,9 @@ def denoising_with_noise_expt( gt_img_path,mean=0.0, std=20):
 
 if __name__ == '__main__':
 
+    noise = Noise(type='gaussian',mean=0.0, std=20.0)
+    gt_img = imread('./data/sansa.jpeg')
+    noise.add_noise(gt_img)
 
     denoising_with_noise_expt('./data/sansa.jpeg')
 
