@@ -20,8 +20,11 @@ from tqdm.auto import tqdm
 from result_analysis import find_files, pickleRead, t, rgb
 from best_outa_n import load_model
 import math
+from random import choices
+
 conf_path = './confs/SRFlow_CelebA_8X.yml'
 plt.show()
+import scipy.stats as st
 
 class ImageDenoising:
     def __init__(self, conf_path):
@@ -120,7 +123,7 @@ class ImageDenoising:
         restored = rgb(self.model.get_sr(lq=t(lq_img), heat=temperature,epses=local_normalized_zs))
         return restored
 
-    def add_noise(self,gt_img, mean,std):
+    def add_gaussian_noise(self, gt_img, mean, std):
         noise = np.random.normal(loc=mean, scale=std, size=gt_img.shape).astype(int)
 
         return gt_img + noise
@@ -129,6 +132,51 @@ class ImageDenoising:
         """A helper method"""
         lq_img = imresize(degraded_img, output_shape=(20,20))
         return self.restore_img(degraded_img,lq_img,temperature)
+
+
+class Noise:
+    def __init__(self, type):
+        self.type = type
+
+    @staticmethod
+    def add_gaussian_noise( gt_img, mean, std):
+        noise = np.random.normal(loc=mean, scale=std, size=gt_img.shape).astype(int)
+
+        return gt_img + noise
+
+    @staticmethod
+    def add_rayleigh_noise(gt_img, scale):
+        noise = np.random.rayleigh(scale=scale, size=gt_img.shape).astype(int)
+        return gt_img + noise
+
+    @staticmethod
+    def add_gamma_noise(gt_img, shape, scale):
+        noise = np.random.gamma(shape=shape, scale=scale, size=gt_img.shape).astype(int)
+        return gt_img + noise
+
+    @staticmethod
+    def add_exp_noise(gt_img, scale):
+        noise = np.random.exponential(scale=scale, size=gt_img.shape).astype(int)
+        return gt_img + noise
+
+    @staticmethod
+    def add_salt_pepper_noise(gt_img, salt_prob, pepper_prob):
+        population = np.arange(0,256).astype(int)
+
+        # define the discrete distribution
+        probs = np.ones(256)*(1 + salt_prob + pepper_prob)
+        probs[0] = pepper_prob
+        probs[255] = salt_prob
+
+        # generate noise with the given numerical distribution
+        noise = choices(population,weights=probs, k=gt_img.size).astype(int)
+        return gt_img + noise.reshape(gt_img.shape)
+
+    @staticmethod
+    def add_uniform_noise(gt_img, low, high):
+        noise = np.random.uniform(low=low, high=high, size=gt_img.shape).astype(int)
+        return gt_img + noise
+
 
 def image_write(img, path):
     plt.imsave(path,img)
@@ -157,21 +205,21 @@ def get_sr_with_epses_expt():
     plt.imshow(sr)
     plt.show()
 
-def denoising_with_noise_expt(lq_img_path, gt_img_path,mean=0.0, std=20):
+def denoising_with_noise_expt( gt_img_path,mean=0.0, std=20):
     imgDenoising = ImageDenoising(conf_path)
-    lq = imresize(imread(lq_img_path), output_shape=(20, 20))
     gt = imresize(imread(gt_img_path), output_shape=(160, 160))
-    noisy_img = imgDenoising.add_noise(gt,mean,std)
+    noisy_img = imgDenoising.add_gaussian_noise(gt, mean, std)
     plt.imshow(noisy_img)
     plt.show()
     restored = imgDenoising.restore_degraded_img(noisy_img)
     plt.imshow(restored)
     plt.show()
     pass
+
 if __name__ == '__main__':
 
 
-    denoising_with_noise_expt('./data/sansa-lq.jpeg','./data/sansa.jpeg')
+    denoising_with_noise_expt('./data/sansa.jpeg')
 
     # get_sr_with_epses_expt()
     #
