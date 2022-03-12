@@ -155,28 +155,39 @@ class Noise:
         return self.noise_func(gt_img, self.kwargs)
 
     @staticmethod
-    def add_gaussian_noise( gt_img, mean, std):
+    def add_gaussian_noise(gt_img, kwargs):
+        mean = kwargs['mean']
+        std = kwargs['std']
+
         noise = np.random.normal(loc=mean, scale=std, size=gt_img.shape).astype(int)
 
         return gt_img + noise
 
     @staticmethod
-    def add_rayleigh_noise(gt_img, scale):
+    def add_rayleigh_noise(gt_img,kwargs):
+        scale = kwargs['scale']
         noise = np.random.rayleigh(scale=scale, size=gt_img.shape).astype(int)
         return gt_img + noise
 
     @staticmethod
-    def add_gamma_noise(gt_img, shape, scale):
+    def add_gamma_noise(gt_img,kwargs):
+        shape = kwargs['shape']
+        scale = kwargs['scale']
+
         noise = np.random.gamma(shape=shape, scale=scale, size=gt_img.shape).astype(int)
         return gt_img + noise
 
     @staticmethod
-    def add_exp_noise(gt_img, scale):
+    def add_exp_noise(gt_img, kwargs):
+        scale = kwargs['scale']
         noise = np.random.exponential(scale=scale, size=gt_img.shape).astype(int)
         return gt_img + noise
 
     @staticmethod
-    def add_salt_pepper_noise(gt_img, salt_prob, pepper_prob):
+    def add_salt_pepper_noise(gt_img, kwargs):
+        salt_prob = kwargs['salt_prob']
+        pepper_prob = kwargs['pepper_prob']
+
         population = np.arange(0,256).astype(int)
 
         # define the discrete distribution
@@ -189,7 +200,9 @@ class Noise:
         return gt_img + noise.reshape(gt_img.shape)
 
     @staticmethod
-    def add_uniform_noise(gt_img, low, high):
+    def add_uniform_noise(gt_img,kwargs):
+        low = kwargs['low']
+        high = kwargs['high']
         noise = np.random.uniform(low=low, high=high, size=gt_img.shape).astype(int)
         return gt_img + noise
 
