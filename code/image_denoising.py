@@ -152,7 +152,7 @@ class Noise:
 
     def add_noise(self, gt_img):
         """Add noise, assuming correct noise model params are provided in kwargs"""
-        return self.noise_func(gt_img, self.kwargs)
+        return self.noise_func(copy.deepcopy(gt_img), self.kwargs)
 
     @staticmethod
     def add_gaussian_noise(gt_img, kwargs):
@@ -236,7 +236,8 @@ def get_sr_with_epses_expt():
 
 def denoising_with_noise_expt( gt_img_path,noise_type='gaussian',):
     imgDenoising = ImageDenoising(conf_path)
-    gt = imresize(imread(gt_img_path), output_shape=(160, 160))
+
+    noise_model = Noise(noise_type,)
     noisy_img = imgDenoising.add_gaussian_noise(gt, mean, std)
     plt.imshow(noisy_img)
     plt.show()
@@ -249,7 +250,7 @@ if __name__ == '__main__':
 
     noise = Noise(type='gaussian',mean=0.0, std=20.0)
     gt_img = imread('./data/sansa.jpeg')
-    noise.add_noise(gt_img)
+    noisy_image = noise.add_noise(gt_img)
 
     denoising_with_noise_expt('./data/sansa.jpeg')
 
