@@ -83,16 +83,17 @@ class DenoisingAnalysis:
         sum_ssim_before = 0.0
         sum_lpips_before = 0.0
 
-        sums_psnr_after = np.linspace(0,1,num=11)
+        sums_psnr_after = np.array([0.0 for _ in np.linspace(0,1,num=11)])
         sums_ssim_after = copy.deepcopy(sums_psnr_after)
         sums_lpips_after = copy.deepcopy(sums_psnr_after)
 
         for lq, gt, fname in tqdm(zip(self.lqs, self.gts, self.filenames), total=len(self.lqs)):
             # add noise
             noisy_gt = noise.add_noise(gt)
-
+            plt.imshow(cast_to_uint8(noisy_gt))
+            plt.show()
             # calculate psnr, ssim and lpips before denoising
-            psnr, ssim, lpips = self.measure.measure(noisy_gt, gt)
+            psnr, ssim, lpips = self.measure.measure(cast_to_uint8(noisy_gt), gt)
             sum_psnr_before += psnr
             sum_ssim_before += ssim
             sum_lpips_before += lpips
@@ -100,7 +101,9 @@ class DenoisingAnalysis:
             # perform denoising at various temperatures
             for i, temperature in enumerate(np.linspace(0, 1, num=11)):
                 restored_img = self.denoiser.restore_degraded_img(noisy_gt, temperature)
-
+                if temperature > 0.3:
+                    plt.imshow(restored_img)
+                    plt.show()
                 # calculate psnr, ssim and lpips after denoising
                 psnr, ssim, lpips = self.measure.measure(restored_img, gt)
                 sums_psnr_after[i] += psnr
@@ -143,6 +146,7 @@ def initDataframesTest():
     denoisingAnalysis.initialize_dataframe()
 
 def fillDfsTest():
+    """Test passing"""
     denoisingAnalysis = DenoisingAnalysis(conf_path, dataroot_lr, dataroot_gt)
     denoisingAnalysis.initialize_dataframe()
     sum_psnr_before, sum_ssim_before, sum_lpips_before = np.random.randn(3)
@@ -161,5 +165,19 @@ def fillDfsTest():
     avgs_before.to_csv('./data/validation/denoising/test-avgs-before.csv')
     avgs_after.to_csv('./data/validation/denoising/test-avgs-after.csv')
 
+def runDenoisingAnalysis():
+    denoisingAnalysis = DenoisingAnalysis(conf_path, dataroot_lr, dataroot_gt)
+    # on gaussian noise model
+    noise = Noise('gaussian', mean=0.0, std=20.0)
+    denoisingAnalysis.denoising_analysis(noise,df_avgs_before_save_path,df_avgs_after_save_path)
+
+
+# helper method
+def cast_to_uint8(img):
+    min_, max_ = img.min(), img.max()
+    img = (img - min_) / (max_ - min_) * 255
+    return img.astype(np.uint8)
+
 if __name__ == '__main__':
-    fillDfsTest()
+    runDenoisingAnalysis()
+
