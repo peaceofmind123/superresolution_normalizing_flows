@@ -31,7 +31,7 @@ class ImageDenoising:
 
         # load the model
         self.model, self.opt = load_model(conf_path)
-        a = 1
+
 
     def get_multiple_zs(self, lq_img, gt_img):
         # read lq img
