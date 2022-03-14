@@ -20,6 +20,13 @@ import math
 from random import choices
 from image_denoising import Noise, ImageDenoising
 
+conf_path = './confs/SRFlow_CelebA_8X.yml'
+dataroot_lr = './data/validation/lr'
+dataroot_gt = './data/validation/hr'
+
+df_avgs_before_save_path = './data/validation/denoising/avgs-before.csv'
+df_avgs_after_save_path = './data/validation/denoising/avgs-after.csv'
+
 class DenoisingAnalysis:
 
     def __init__(self,conf_path, dataroot_lr, dataroot_gt):
@@ -123,3 +130,19 @@ class DenoisingAnalysis:
         self.avgs_after.to_csv(df_avgs_after_save_path)
 
 
+
+def denoisingClassInitTest():
+    """Seems like it's passing"""
+    denoisingAnalysis = DenoisingAnalysis(conf_path,dataroot_lr, dataroot_gt)
+    pass
+
+
+def initDataframesTest():
+    """Seems like it's passing"""
+    denoisingAnalysis = DenoisingAnalysis(conf_path, dataroot_lr, dataroot_gt)
+    denoisingAnalysis.initialize_dataframe()
+    pass
+
+
+if __name__ == '__main__':
+    initDataframesTest()
