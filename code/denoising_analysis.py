@@ -64,11 +64,11 @@ class DenoisingAnalysis:
         denoising at various temperatures
         """
         temperatures = [x for x in np.linspace(0, 1, num=11)]
-        self.avgs_after = pd.DataFrame(columns=['psnr_after', 'ssim_after', 'lpips_after'],
+        self.avgs_after = pd.DataFrame(columns=['psnr', 'ssim', 'lpips'],
                           index=temperatures)
 
         # this df will have only one row
-        self.avgs_before = pd.DataFrame(columns=['psnr_before', 'ssim_before', 'lpips_before'], index=[0])
+        self.avgs_before = pd.DataFrame(columns=['psnr', 'ssim', 'lpips'], index=[0])
 
     def denoising_analysis(self,  noise:Noise, df_avg_before_save_path, df_avgs_after_save_path):
         """
@@ -122,9 +122,9 @@ class DenoisingAnalysis:
         self.avgs_before['ssim'][0] = sum_ssim_before
         self.avgs_before['lpips'][0] = sum_lpips_before
 
-        self.avgs_after['psnr'] = pd.Series(data=sums_psnr_after)
-        self.avgs_after['ssim'] = pd.Series(data=sums_ssim_after)
-        self.avgs_after['lpips'] = pd.Series(data=sums_lpips_after)
+        self.avgs_after['psnr'] = sums_psnr_after
+        self.avgs_after['ssim'] = sums_ssim_after
+        self.avgs_after['lpips'] = sums_lpips_after
 
         self.avgs_before.to_csv(df_avg_before_save_path)
         self.avgs_after.to_csv(df_avgs_after_save_path)
@@ -141,8 +141,25 @@ def initDataframesTest():
     """Seems like it's passing"""
     denoisingAnalysis = DenoisingAnalysis(conf_path, dataroot_lr, dataroot_gt)
     denoisingAnalysis.initialize_dataframe()
-    pass
 
+def fillDfsTest():
+    denoisingAnalysis = DenoisingAnalysis(conf_path, dataroot_lr, dataroot_gt)
+    denoisingAnalysis.initialize_dataframe()
+    sum_psnr_before, sum_ssim_before, sum_lpips_before = np.random.randn(3)
+    sums_psnrs_after, sums_ssims_after, sums_lpips_after = [np.random.randn(11) for _ in range(3)]
+    avgs_before = denoisingAnalysis.avgs_before
+    avgs_after = denoisingAnalysis.avgs_after
+
+    avgs_before['psnr'][0] = sum_psnr_before
+    avgs_before['ssim'][0] = sum_ssim_before
+    avgs_before['lpips'][0] = sum_lpips_before
+
+    avgs_after['psnr'] = sums_psnrs_after
+    avgs_after['ssim'] = sums_ssims_after
+    avgs_after['lpips'] = sums_lpips_after
+
+    avgs_before.to_csv('./data/validation/denoising/test-avgs-before.csv')
+    avgs_after.to_csv('./data/validation/denoising/test-avgs-after.csv')
 
 if __name__ == '__main__':
-    initDataframesTest()
+    fillDfsTest()
