@@ -19,6 +19,7 @@ from best_outa_n import load_model
 import math
 from random import choices
 from image_denoising import Noise, ImageDenoising
+from result_analysis import generateGraph
 
 conf_path = './confs/SRFlow_CelebA_8X.yml'
 dataroot_lr = './data/validation/lr'
@@ -129,7 +130,28 @@ class DenoisingAnalysis:
         self.avgs_before.to_csv(df_avg_before_save_path)
         self.avgs_after.to_csv(df_avgs_after_save_path)
 
+    @staticmethod
+    def draw_curve(df_avg_before_save_path, df_avgs_after_save_path, graph_save_path):
+        # read the average dataframe before denoising
+        df_avg_before = pd.read_csv(df_avg_before_save_path,index_col=0)
 
+        # read the average dataframe after denoising
+        df_avgs_after = pd.read_csv(df_avgs_after_save_path, index_col=0)
+
+        # temperature (xs)
+        temperatures = np.linspace(0,1,num=11)
+
+        # psnr before (ys)
+        avg_psnr_before = [df_avg_before['psnr'][0] for _ in range(11)]
+        # psnr after (another ys)
+        avg_psnrs_after = list(df_avgs_after['psnr'])
+
+        xss = [temperatures, temperatures]
+        yss = [avg_psnr_before, avg_psnrs_after]
+
+        legends = ['before denoising', 'after denoising']
+        generate_denoising_graph('Temperature','PSNR',graph_save_path,xss,
+                      yss,1, legends=legends)
 
 def denoisingClassInitTest():
     """Seems like it's passing"""
@@ -169,12 +191,38 @@ def runDenoisingAnalysis():
     denoisingAnalysis.denoising_analysis(noise,df_avgs_before_save_path,df_avgs_after_save_path)
 
 
-# helper method
+# helper methods
 def cast_to_uint8(img):
     min_, max_ = img.min(), img.max()
     img = (img - min_) / (max_ - min_) * 255
     return img.astype(np.uint8)
 
-if __name__ == '__main__':
-    runDenoisingAnalysis()
+def generate_denoising_graph(xlabel, ylabel, save_path, xss,yss, fig_idx,legends=None):
+    plt.rcParams["font.family"] = 'Times New Roman'
+    plt.rcParams["font.size"] = 22
+    plt.figure(fig_idx)
+    _, ax = plt.subplots(1, 1)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid()
+    plt.tick_params(
+        bottom=False,  # ticks along the bottom edge are off
+        top=False,  # ticks along the top edge are off,
+        left=False,
+        right=False)
+    for i, (xs, ys) in enumerate(zip(xss, yss)):
+        # by convention, the first (xs,ys) pair is the baseline and will be shown dashed
+        if i == 0:
+            ax.plot(xs,ys,'--') # : stands for dashed style
+        else:
+            ax.plot(xs, ys, marker='o')
 
+        if legends is not None:
+            ax.legend(legends) # provide legends as an array
+    plt.savefig(fname=save_path, dpi=600, bbox_inches='tight')
+
+if __name__ == '__main__':
+    #runDenoisingAnalysis()
+    DenoisingAnalysis.draw_curve('./data/validation/denoising/test-avgs-before.csv',
+                                 './data/validation/denoising/test-avgs-after.csv',
+                                 './data/validation/denoising/test_gaussian_psnr.png')
