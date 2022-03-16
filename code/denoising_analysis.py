@@ -230,14 +230,20 @@ def generate_denoising_graph(title, xlabel, ylabel, save_path, xss,yss, fig_idx,
             ax.plot(xs, ys, marker='o')
 
         if legends is not None:
-            ax.legend(legends) # provide legends as an array
+            ax.legend(legends, prop={'size': 16}) # provide legends as an array
 
     plt.title(title)
     plt.savefig(fname=save_path, dpi=600, bbox_inches='tight')
 
+
+def draw_curve_gaussian():
+    """The curves plotted herein are on real data, not test data"""
+    graph_save_paths = [f'./data/validation/denoising/gaussian_{meas}.png' for meas in ['psnr', 'ssim', 'lpips']]
+    DenoisingAnalysis.draw_curve('Denoising of Gaussian noise', './data/validation/denoising/avgs-before-gaussian.csv',
+                                 './data/validation/denoising/avgs-after-gaussian.csv',
+                                 graph_save_paths)
+
+
 if __name__ == '__main__':
     #runDenoisingAnalysis()
-    graph_save_paths = [f'./data/validation/denoising/test_gaussian_{meas}.png' for meas in ['psnr','ssim','lpips']]
-    DenoisingAnalysis.draw_curve('Denoising of Gaussian noise','./data/validation/denoising/test-avgs-before.csv',
-                                 './data/validation/denoising/test-avgs-after.csv',
-                                 graph_save_paths)
+    draw_curve_gaussian()
