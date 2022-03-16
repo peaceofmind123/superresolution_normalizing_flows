@@ -71,7 +71,7 @@ class DenoisingAnalysis:
         # this df will have only one row
         self.avgs_before = pd.DataFrame(columns=['psnr', 'ssim', 'lpips'], index=[0])
 
-    def denoising_analysis(self,  noise:Noise, df_avg_before_save_path, df_avgs_after_save_path):
+    def denoising_analysis(self,  noise:Noise, df_avg_before_save_path, df_avgs_after_save_path, plot_figs=False):
         """
         Perform denoising analysis for the particular noise type
         The noise object has to be constructed beforehand and passed in
@@ -91,6 +91,9 @@ class DenoisingAnalysis:
         for lq, gt, fname in tqdm(zip(self.lqs, self.gts, self.filenames), total=len(self.lqs)):
             # add noise
             noisy_gt = cast_to_uint8(noise.add_noise(gt))
+            if plot_figs:
+                plt.imshow(noisy_gt)
+                plt.show()
 
             # calculate psnr, ssim and lpips before denoising
             psnr, ssim, lpips = self.measure.measure(noisy_gt, gt)
@@ -101,6 +104,9 @@ class DenoisingAnalysis:
             # perform denoising at various temperatures
             for i, temperature in enumerate(np.linspace(0, 1, num=11)):
                 restored_img = self.denoiser.restore_degraded_img(noisy_gt, temperature)
+                if plot_figs and temperature > 0.3:
+                    plt.imshow(restored_img)
+                    plt.show()
 
                 # calculate psnr, ssim and lpips after denoising
                 psnr, ssim, lpips = self.measure.measure(restored_img, gt)
@@ -199,8 +205,14 @@ def fillDfsTest():
 def runDenoisingAnalysis():
     denoisingAnalysis = DenoisingAnalysis(conf_path, dataroot_lr, dataroot_gt)
     # on different noise models
-    noise = Noise('rayleigh', scale=20)
-    denoisingAnalysis.denoising_analysis(noise,df_avgs_before_save_path,df_avgs_after_save_path)
+
+    #NOTE: Keep these instructions as comments, DO NOT REMOVE THEM
+    # will need during report preparation
+
+    #noise = Noise('gaussian', mean=0.0, std=20.0)
+    #noise = Noise('rayleigh', scale=20)
+    noise = Noise('gamma',shape=6, scale=10)
+    denoisingAnalysis.denoising_analysis(noise,df_avgs_before_save_path,df_avgs_after_save_path, plot_figs=True)
 
 
 # helper methods

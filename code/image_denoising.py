@@ -175,6 +175,11 @@ class Noise:
         scale = kwargs['scale']
 
         noise = np.random.gamma(shape=shape, scale=scale, size=gt_img.shape).astype(int)
+        # clamping can be done, but it will not be representative of the noise model
+        # noisy_img = gt_img + noise
+        # noisy_img = np.where(noisy_img < 0,0,noisy_img)
+        # noisy_img = np.where(noisy_img > 255, 255, noisy_img)
+
         return gt_img + noise
 
     @staticmethod
