@@ -243,7 +243,15 @@ def draw_curve_gaussian():
                                  './data/validation/denoising/avgs-after-gaussian.csv',
                                  graph_save_paths)
 
+def draw_curve_rayleigh():
+    """The curves plotted herein are on real data, not test data"""
+    graph_save_paths = [f'./data/validation/denoising/rayleigh_{meas}.png' for meas in ['psnr', 'ssim', 'lpips']]
+    DenoisingAnalysis.draw_curve('Denoising of Gaussian noise', './data/validation/denoising/avgs-before-rayleigh.csv',
+                                 './data/validation/denoising/avgs-after-rayleigh.csv',
+                                 graph_save_paths)
+
+
 
 if __name__ == '__main__':
-    #runDenoisingAnalysis()
-    draw_curve_gaussian()
+    runDenoisingAnalysis()
+    #draw_curve_rayleigh()
