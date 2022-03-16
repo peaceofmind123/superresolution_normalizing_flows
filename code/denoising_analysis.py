@@ -89,17 +89,17 @@ class DenoisingAnalysis:
 
         for lq, gt, fname in tqdm(zip(self.lqs, self.gts, self.filenames), total=len(self.lqs)):
             # add noise
-            noisy_gt = noise.add_noise(gt)
+            noisy_gt = cast_to_uint8(noise.add_noise(gt))
 
             # calculate psnr, ssim and lpips before denoising
-            psnr, ssim, lpips = self.measure.measure(cast_to_uint8(noisy_gt), gt)
+            psnr, ssim, lpips = self.measure.measure(noisy_gt, gt)
             sum_psnr_before += psnr
             sum_ssim_before += ssim
             sum_lpips_before += lpips
 
             # perform denoising at various temperatures
             for i, temperature in enumerate(np.linspace(0, 1, num=11)):
-                restored_img = self.denoiser.restore_degraded_img(cast_to_uint8(noisy_gt), temperature)
+                restored_img = self.denoiser.restore_degraded_img(noisy_gt, temperature)
 
                 # calculate psnr, ssim and lpips after denoising
                 psnr, ssim, lpips = self.measure.measure(restored_img, gt)
