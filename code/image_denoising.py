@@ -196,7 +196,7 @@ class Noise:
         probs[255] = salt_prob
 
         # generate noise with the given numerical distribution
-        noise = choices(population,weights=probs, k=gt_img.size).astype(int)
+        noise = np.array(choices(population,weights=probs, k=gt_img.size)).astype(int)
         return gt_img + noise.reshape(gt_img.shape)
 
     @staticmethod
