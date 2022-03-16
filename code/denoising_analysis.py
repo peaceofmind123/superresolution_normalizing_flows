@@ -131,7 +131,7 @@ class DenoisingAnalysis:
         self.avgs_after.to_csv(df_avgs_after_save_path)
 
     @staticmethod
-    def draw_curve(df_avg_before_save_path, df_avgs_after_save_path, graph_save_path):
+    def draw_curve(title, df_avg_before_save_path, df_avgs_after_save_path, graph_save_paths):
         # read the average dataframe before denoising
         df_avg_before = pd.read_csv(df_avg_before_save_path,index_col=0)
 
@@ -141,17 +141,29 @@ class DenoisingAnalysis:
         # temperature (xs)
         temperatures = np.linspace(0,1,num=11)
 
-        # psnr before (ys)
+        # measures before (ys)
         avg_psnr_before = [df_avg_before['psnr'][0] for _ in range(11)]
-        # psnr after (another ys)
+        avg_ssim_before = [df_avg_before['ssim'][0] for _ in range(11)]
+        avg_lpips_before = [df_avg_before['lpips'][0] for _ in range(11)]
+
+        # measures after (another ys)
         avg_psnrs_after = list(df_avgs_after['psnr'])
+        avg_ssims_after = list(df_avgs_after['ssim'])
+        avg_lpips_after = list(df_avgs_after['lpips'])
 
         xss = [temperatures, temperatures]
-        yss = [avg_psnr_before, avg_psnrs_after]
+        yss_psnr = [avg_psnr_before, avg_psnrs_after]
+        yss_ssim = [avg_ssim_before, avg_ssims_after]
+        yss_lpips = [avg_lpips_before, avg_lpips_after]
 
         legends = ['before denoising', 'after denoising']
-        generate_denoising_graph('Temperature','PSNR',graph_save_path,xss,
-                      yss,1, legends=legends)
+        generate_denoising_graph(title, 'Temperature','PSNR',graph_save_paths[0],xss,
+                      yss_psnr,1, legends=legends)
+        generate_denoising_graph(title, 'Temperature','SSIM',graph_save_paths[1],xss,
+                      yss_ssim,2, legends=legends)
+        generate_denoising_graph(title, 'Temperature','LPIPS',graph_save_paths[2],xss,
+                      yss_lpips,3, legends=legends)
+
 
 def denoisingClassInitTest():
     """Seems like it's passing"""
@@ -197,7 +209,7 @@ def cast_to_uint8(img):
     img = (img - min_) / (max_ - min_) * 255
     return img.astype(np.uint8)
 
-def generate_denoising_graph(xlabel, ylabel, save_path, xss,yss, fig_idx,legends=None):
+def generate_denoising_graph(title, xlabel, ylabel, save_path, xss,yss, fig_idx,legends=None):
     plt.rcParams["font.family"] = 'Times New Roman'
     plt.rcParams["font.size"] = 22
     plt.figure(fig_idx)
@@ -219,10 +231,13 @@ def generate_denoising_graph(xlabel, ylabel, save_path, xss,yss, fig_idx,legends
 
         if legends is not None:
             ax.legend(legends) # provide legends as an array
+
+    plt.title(title)
     plt.savefig(fname=save_path, dpi=600, bbox_inches='tight')
 
 if __name__ == '__main__':
     #runDenoisingAnalysis()
-    DenoisingAnalysis.draw_curve('./data/validation/denoising/test-avgs-before.csv',
+    graph_save_paths = [f'./data/validation/denoising/test_gaussian_{meas}.png' for meas in ['psnr','ssim','lpips']]
+    DenoisingAnalysis.draw_curve('Denoising of Gaussian noise','./data/validation/denoising/test-avgs-before.csv',
                                  './data/validation/denoising/test-avgs-after.csv',
-                                 './data/validation/denoising/test_gaussian_psnr.png')
+                                 graph_save_paths)
