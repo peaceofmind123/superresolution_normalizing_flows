@@ -211,7 +211,8 @@ def runDenoisingAnalysis():
 
     #noise = Noise('gaussian', mean=0.0, std=20.0)
     #noise = Noise('rayleigh', scale=20)
-    noise = Noise('gamma',shape=6, scale=10)
+    #noise = Noise('gamma',shape=6, scale=10)
+    noise = Noise('exp', scale=10)
     denoisingAnalysis.denoising_analysis(noise,df_avgs_before_save_path,df_avgs_after_save_path, plot_figs=True)
 
 
