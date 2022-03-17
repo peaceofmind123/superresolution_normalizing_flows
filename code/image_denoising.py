@@ -193,16 +193,12 @@ class Noise:
         salt_prob = kwargs['salt_prob']
         pepper_prob = kwargs['pepper_prob']
 
-        population = np.arange(0,256).astype(int)
-
-        # define the discrete distribution
-        probs = np.ones(256)*(1 + salt_prob + pepper_prob)
-        probs[0] = pepper_prob
-        probs[255] = salt_prob
-
-        # generate noise with the given numerical distribution
-        noise = np.array(choices(population,weights=probs, k=gt_img.size)).astype(int)
-        return gt_img + noise.reshape(gt_img.shape)
+        # sample random numbers from uniform distribution from 0-1
+        p1 = np.random.uniform(low=0.0, high=1.0,size=gt_img.shape)
+        p2 = np.random.uniform(low=0.0, high=1.0, size=gt_img.shape)
+        noisy_image = np.where(p1<=salt_prob,0,gt_img)
+        noisy_image = np.where(p2<=pepper_prob, 255, noisy_image)
+        return noisy_image
 
     @staticmethod
     def add_uniform_noise(gt_img,kwargs):
