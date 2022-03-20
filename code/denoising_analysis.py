@@ -262,12 +262,44 @@ def draw_curve_gaussian():
 def draw_curve_rayleigh():
     """The curves plotted herein are on real data, not test data"""
     graph_save_paths = [f'./data/validation/denoising/rayleigh_{meas}.png' for meas in ['psnr', 'ssim', 'lpips']]
-    DenoisingAnalysis.draw_curve('Denoising of Gaussian noise', './data/validation/denoising/avgs-before-rayleigh.csv',
+    DenoisingAnalysis.draw_curve('Denoising of Rayleigh noise', './data/validation/denoising/avgs-before-rayleigh.csv',
                                  './data/validation/denoising/avgs-after-rayleigh.csv',
                                  graph_save_paths)
 
+def draw_curve_gamma():
+    """The curves plotted herein are on real data, not test data"""
+    graph_save_paths = [f'./data/validation/denoising/gamma_{meas}.png' for meas in ['psnr', 'ssim', 'lpips']]
+    DenoisingAnalysis.draw_curve('Denoising of Gamma noise', './data/validation/denoising/avgs-before-gamma.csv',
+                                 './data/validation/denoising/avgs-after-gamma.csv',
+                                 graph_save_paths)
+
+def draw_curve_exp():
+    """The curves plotted herein are on real data, not test data"""
+    graph_save_paths = [f'./data/validation/denoising/exp_{meas}.png' for meas in ['psnr', 'ssim', 'lpips']]
+    DenoisingAnalysis.draw_curve('Denoising of Exponential noise', './data/validation/denoising/avgs-before-exp.csv',
+                                 './data/validation/denoising/avgs-after-exp.csv',
+                                 graph_save_paths)
+
+def draw_curve_uniform():
+    """The curves plotted herein are on real data, not test data"""
+    graph_save_paths = [f'./data/validation/denoising/uniform_{meas}.png' for meas in ['psnr', 'ssim', 'lpips']]
+    DenoisingAnalysis.draw_curve('Denoising of Uniform noise', './data/validation/denoising/avgs-before-uniform.csv',
+                                 './data/validation/denoising/avgs-after-uniform.csv',
+                                 graph_save_paths)
+
+def draw_curve_salt_pepper():
+    """The curves plotted herein are on real data, not test data"""
+    graph_save_paths = [f'./data/validation/denoising/salt_pepper_{meas}.png' for meas in ['psnr', 'ssim', 'lpips']]
+    DenoisingAnalysis.draw_curve('Denoising of Salt and Pepper noise', './data/validation/denoising/avgs-before-salt_pepper.csv',
+                                 './data/validation/denoising/avgs-after-salt_pepper.csv',
+                                 graph_save_paths)
 
 
 if __name__ == '__main__':
-    runDenoisingAnalysis()
-    #draw_curve_rayleigh()
+    #runDenoisingAnalysis()
+    draw_curve_gaussian()
+    draw_curve_rayleigh()
+    draw_curve_exp()
+    draw_curve_gamma()
+    draw_curve_salt_pepper()
+    draw_curve_uniform()
